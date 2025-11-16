@@ -1,0 +1,42 @@
+[project]
+name = "workstate"
+version = "0.1.0"
+description = "Manage state between durable function steps"
+readme = "README.md"
+authors = [
+    { name = "Mark Sagi-Kazar", email = "mark.sagikazar@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.12.4",
+]
+
+[project.optional-dependencies]
+obstore = [
+    "obstore>=0.8.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.23,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+]
+markers = [
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow",
+]
