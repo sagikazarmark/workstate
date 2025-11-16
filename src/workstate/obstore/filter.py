@@ -15,8 +15,10 @@ def filter_files(path: Path, filter: Filter | None) -> Iterator[Path]:
         if not file_path.is_file():
             continue
 
-        if not filter or filter.match(str(file_path.relative_to(path))):
-            yield file_path
+        if filter and not filter.match(str(file_path.relative_to(path))):
+            continue
+
+        yield file_path
 
 
 class IncludeExcludeFilter(BaseModel):
