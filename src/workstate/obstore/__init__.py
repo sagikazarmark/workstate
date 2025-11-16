@@ -52,3 +52,17 @@ class StateManager(Generic[Options]):
                 # logger.info("Uploading file", extra={"file": str(relative_path)})
 
                 self.store.put(object_key, file_path)
+
+
+__all__ = [
+    "HasFilter",
+    "HasPrefix",
+    "HasUrl",
+    "MayHaveFilter",
+    "MayHavePrefix",
+    "MayHaveUrl",
+    "Prefix",
+    "resolve_filter",
+    "resolve_prefix",
+    "StateManager",
+]
