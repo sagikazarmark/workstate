@@ -34,10 +34,19 @@ class StateManager(Generic[Options]):
 
             prefix = resolve_prefix(options)
 
+            count = 0
+
             for file_path in filter_files(Path(temp_dir), resolve_filter(options)):
                 relative_path = file_path.relative_to(temp_dir)
                 object_key = str(prefix.joinpath(relative_path))
 
                 self.logger.info("Uploading file", extra={"file": str(relative_path)})
 
+                count += 1
+
                 self.store.put(object_key, file_path)
+
+            if count == 0:
+                self.logger.warning("No files found to upload")
+
+            self.logger.info("Uploaded %d files", count)
