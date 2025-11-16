@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build
+  test:
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +22,6 @@ jobs:
         with:
           build: "true"
 
-      - name: Build
+      - name: Run tests
         shell: devenv shell bash -- -e {0}
-        run: echo
+        run: uv run pytest
