@@ -14,6 +14,7 @@ from .options import (
     MayHaveFilter,
     MayHavePrefix,
     MayHaveUrl,
+    Prefix,
     resolve_filter,
     resolve_prefix,
 )
