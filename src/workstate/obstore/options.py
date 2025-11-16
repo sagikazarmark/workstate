@@ -1,5 +1,5 @@
 from pathlib import PurePosixPath
-from typing import Annotated, Protocol, runtime_checkable
+from typing import Annotated, Protocol, TypeVar, runtime_checkable
 
 from pydantic import AfterValidator, AnyUrl
 
@@ -44,6 +44,13 @@ class HasFilter(Protocol):
 @runtime_checkable
 class MayHaveFilter(Protocol):
     filter: Filter | None
+
+
+Options = TypeVar(
+    "Options",
+    bound=HasPrefix | HasUrl | HasFilter | MayHavePrefix | MayHaveUrl | MayHaveFilter,
+    contravariant=True,
+)
 
 
 def resolve_prefix(options: object) -> Prefix:

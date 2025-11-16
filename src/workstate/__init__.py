@@ -1,8 +1,10 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Protocol, TypeVar
+from typing import Any, Protocol, TypeVar
 
-Options = TypeVar("Options", contravariant=True)
+from . import obstore
+
+Options = TypeVar("Options", contravariant=True, default=Any)
 
 
 class StateManager(Protocol[Options]):
@@ -11,3 +13,10 @@ class StateManager(Protocol[Options]):
 
     # @contextmanager
     # def load(self, options: Options) -> Iterator[str]: ...
+
+
+__all__ = [
+    "obstore",
+    "Options",
+    "StateManager",
+]
