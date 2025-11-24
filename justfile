@@ -33,5 +33,10 @@ release bump='patch':
       ;;
   esac
 
+  uv version $version
+  git add pyproject.toml uv.lock
+  git commit -m "Release ${version}"
+
   git tag -m "Release ${version}" $tag
   git push origin $tag
+  git push
