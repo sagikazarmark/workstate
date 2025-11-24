@@ -1,11 +1,11 @@
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePath, PurePosixPath
 from typing import Iterator, Protocol, overload
 
 from pydantic import AnyUrl, DirectoryPath
 
 
-class Filter(Protocol):
-    def match(self, path: str) -> bool: ...
+class PrefixFilter(Protocol):
+    def match(self, path: PurePosixPath) -> bool: ...
 
 
 class DirectoryLoader(Protocol):
@@ -13,7 +13,16 @@ class DirectoryLoader(Protocol):
     def load(self, ref: AnyUrl | PurePosixPath, dst: DirectoryPath): ...
 
     @overload
-    def load(self, ref: AnyUrl | PurePosixPath, dst: DirectoryPath, filter: Filter): ...
+    def load(
+        self,
+        ref: AnyUrl | PurePosixPath,
+        dst: DirectoryPath,
+        filter: PrefixFilter,
+    ): ...
+
+
+class PathFilter(Protocol):
+    def match(self, path: PurePath) -> bool: ...
 
 
 class DirectoryPersister(Protocol):
@@ -29,16 +38,16 @@ class DirectoryPersister(Protocol):
         self,
         ref: AnyUrl | PurePosixPath,
         src: DirectoryPath,
-        filter: Filter,
+        filter: PathFilter,
     ): ...
 
 
-def _filter_files(path: DirectoryPath, filter: Filter | None) -> Iterator[Path]:
+def _filter_files(path: DirectoryPath, filter: PathFilter | None) -> Iterator[Path]:
     for file_path in path.rglob("*"):
         if not file_path.is_file():
             continue
 
-        if filter and not filter.match(str(file_path.relative_to(path))):
+        if filter and not filter.match(file_path.relative_to(path)):
             continue
 
         yield file_path

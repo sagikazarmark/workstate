@@ -4,7 +4,7 @@ from typing import IO, overload
 
 import obstore
 import obstore.store
-from pydantic import AnyUrl
+from pydantic import AnyUrl, FilePath
 
 from .base import _Base
 
@@ -24,13 +24,15 @@ class FileLoader(_FileBase):
     def load(self, ref: AnyUrl | PurePosixPath, dst: IO): ...
 
     def load(
-        self, ref: AnyUrl | PurePosixPath, dst: Path | IO | None = None
+        self,
+        ref: AnyUrl | PurePosixPath,
+        dst: Path | IO | None = None,
     ) -> IO | None:
         store, path = self._resolve_store_and_path(ref)
 
         # TODO: https://github.com/developmentseed/obstore/pull/593
         # TODO: https://github.com/developmentseed/obstore/issues/314
-        data = obstore.get(store, path).bytes().to_bytes()
+        data = obstore.get(store, str(path)).bytes().to_bytes()
 
         if dst is None:
             # Return as IO
@@ -52,11 +54,13 @@ class FilePersister(_FileBase):
     ): ...
 
     @overload
-    def persist(self, ref: AnyUrl | PurePosixPath, src: Path): ...
+    def persist(self, ref: AnyUrl | PurePosixPath, src: FilePath): ...
 
     def persist(
-        self, ref: AnyUrl | PurePosixPath, src: bytes | bytearray | memoryview | Path
+        self,
+        ref: AnyUrl | PurePosixPath,
+        src: bytes | bytearray | memoryview | FilePath,
     ):
         store, path = self._resolve_store_and_path(ref)
 
-        obstore.put(store, path, src)
+        obstore.put(store, str(path), src)

@@ -1,7 +1,7 @@
 from pathlib import Path, PurePosixPath
 from typing import IO, Protocol, overload
 
-from pydantic import AnyUrl
+from pydantic import AnyUrl, FilePath
 
 
 class FileLoader(Protocol):
@@ -24,4 +24,4 @@ class FilePersister(Protocol):
     ): ...
 
     @overload
-    def persist(self, ref: AnyUrl | PurePosixPath, src: Path): ...
+    def persist(self, ref: AnyUrl | PurePosixPath, src: FilePath): ...
