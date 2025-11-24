@@ -2,7 +2,7 @@
 
 import pytest
 
-from workstate import FileLoader, FilePersister, obstore
+from workstate import FileLoader, FilePersister, fsspec, obstore
 
 
 def test_workstate_imports():
@@ -10,6 +10,7 @@ def test_workstate_imports():
     # Test that we can import the main classes
     assert FileLoader is not None
     assert FilePersister is not None
+    assert fsspec is not None
     assert obstore is not None
 
 
@@ -17,7 +18,7 @@ def test_workstate_all_exports():
     """Test that __all__ contains the expected exports."""
     import workstate
 
-    expected_exports = {"obstore", "FileLoader", "FilePersister"}
+    expected_exports = {"fsspec", "obstore", "FileLoader", "FilePersister"}
     actual_exports = set(workstate.__all__)
 
     assert actual_exports == expected_exports

@@ -1,9 +1,6 @@
-from . import fsspec, obstore
 from .file import FileLoader, FilePersister
 
 __all__ = [
-    "fsspec",
-    "obstore",
     "FileLoader",
     "FilePersister",
 ]
