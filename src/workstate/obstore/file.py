@@ -28,31 +28,33 @@ class FileLoader(_FileBase):
         ref: AnyUrl | PurePosixPath,
         dst: Path | IO | None = None,
     ) -> IO | None:
-        store, path = self._resolve_store_and_prefix(ref)
+        store, path = self._resolve_store_and_path(ref)
+
+        if path is None:
+            raise ValueError("Cannot load file with empty path")
 
         # TODO: https://github.com/developmentseed/obstore/pull/593
         # TODO: https://github.com/developmentseed/obstore/issues/314
-        if path is None:
-            raise ValueError("Cannot load file with empty path")
         data = obstore.get(store, str(path)).bytes().to_bytes()
 
-        if dst is None:
-            # Return as IO
+        if dst is None:  # Return as IO
             return io.BytesIO(data)
-        elif isinstance(dst, Path):
-            # Write to the provided path
+        elif isinstance(dst, Path):  # Write to the provided path
             dst.write_bytes(data)
+
             return None
-        else:
-            # Write to the provided IO object
+        else:  # Write to the provided IO object
             dst.write(data)
+
             return None
 
 
 class FilePersister(_FileBase):
     @overload
     def persist(
-        self, ref: AnyUrl | PurePosixPath, src: bytes | bytearray | memoryview
+        self,
+        ref: AnyUrl | PurePosixPath,
+        src: bytes | bytearray | memoryview,
     ): ...
 
     @overload
@@ -63,8 +65,9 @@ class FilePersister(_FileBase):
         ref: AnyUrl | PurePosixPath,
         src: bytes | bytearray | memoryview | FilePath,
     ):
-        store, path = self._resolve_store_and_prefix(ref)
+        store, path = self._resolve_store_and_path(ref)
 
         if path is None:
             raise ValueError("Cannot persist file with empty path")
+
         obstore.put(store, str(path), src)

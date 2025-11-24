@@ -42,11 +42,11 @@ class TestDirectoryLoaderBase:
         """Test store and path resolution with URL."""
         mock_store = Mock()
 
-        with patch.object(DirectoryLoader, "_resolve_store_and_prefix") as mock_resolve:
+        with patch.object(DirectoryLoader, "_resolve_store_and_path") as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data/models"))
 
             loader = DirectoryLoader()
-            store, path = loader._resolve_store_and_prefix(
+            store, path = loader._resolve_store_and_path(
                 AnyUrl("s3://bucket/data/models/")
             )
 
@@ -58,11 +58,11 @@ class TestDirectoryLoaderBase:
         """Test store and path resolution with PurePosixPath."""
         mock_store = Mock()
 
-        with patch.object(DirectoryLoader, "_resolve_store_and_prefix") as mock_resolve:
+        with patch.object(DirectoryLoader, "_resolve_store_and_path") as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("local/path"))
 
             loader = DirectoryLoader()
-            store, path = loader._resolve_store_and_prefix(PurePosixPath("local/path"))
+            store, path = loader._resolve_store_and_path(PurePosixPath("local/path"))
 
             assert store is mock_store
             assert path == PurePosixPath("local/path")
@@ -90,7 +90,7 @@ class TestDirectoryLoader:
         mock_result2.bytes.return_value.to_bytes.return_value = b"model2 data"
         mock_obstore.get.side_effect = [mock_result1, mock_result2]
 
-        with patch.object(DirectoryLoader, "_resolve_store_and_prefix") as mock_resolve:
+        with patch.object(DirectoryLoader, "_resolve_store_and_path") as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data/models"))
 
             loader = DirectoryLoader()
@@ -135,7 +135,7 @@ class TestDirectoryLoader:
         mock_result1.bytes.return_value.to_bytes.return_value = b"bert model"
         mock_obstore.get.return_value = mock_result1
 
-        with patch.object(DirectoryLoader, "_resolve_store_and_prefix") as mock_resolve:
+        with patch.object(DirectoryLoader, "_resolve_store_and_path") as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data"))
 
             loader = DirectoryLoader()
@@ -180,7 +180,7 @@ class TestDirectoryLoader:
         mock_result.bytes.return_value.to_bytes.return_value = b"model data"
         mock_obstore.get.return_value = mock_result
 
-        with patch.object(DirectoryLoader, "_resolve_store_and_prefix") as mock_resolve:
+        with patch.object(DirectoryLoader, "_resolve_store_and_path") as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data/models"))
 
             loader = DirectoryLoader()
@@ -213,7 +213,7 @@ class TestDirectoryLoader:
         mock_result.bytes.return_value.to_bytes.return_value = b"content"
         mock_obstore.get.return_value = mock_result
 
-        with patch.object(DirectoryLoader, "_resolve_store_and_prefix") as mock_resolve:
+        with patch.object(DirectoryLoader, "_resolve_store_and_path") as mock_resolve:
             mock_resolve.return_value = (mock_store, None)
 
             loader = DirectoryLoader()
@@ -243,7 +243,7 @@ class TestDirectoryLoader:
         mock_result.bytes.return_value.to_bytes.return_value = b"model data"
         mock_obstore.get.return_value = mock_result
 
-        with patch.object(DirectoryLoader, "_resolve_store_and_prefix") as mock_resolve:
+        with patch.object(DirectoryLoader, "_resolve_store_and_path") as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data/models"))
 
             loader = DirectoryLoader()
@@ -278,7 +278,7 @@ class TestDirectoryPersister:
         mock_store = Mock()
 
         with patch.object(
-            DirectoryPersister, "_resolve_store_and_prefix"
+            DirectoryPersister, "_resolve_store_and_path"
         ) as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data/output"))
 
@@ -321,7 +321,7 @@ class TestDirectoryPersister:
         mock_filter = Mock()
 
         with patch.object(
-            DirectoryPersister, "_resolve_store_and_prefix"
+            DirectoryPersister, "_resolve_store_and_path"
         ) as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data/models"))
 
@@ -352,7 +352,7 @@ class TestDirectoryPersister:
         mock_store = Mock()
 
         with patch.object(
-            DirectoryPersister, "_resolve_store_and_prefix"
+            DirectoryPersister, "_resolve_store_and_path"
         ) as mock_resolve:
             mock_resolve.return_value = (mock_store, None)
 
@@ -379,7 +379,7 @@ class TestDirectoryPersister:
         mock_store = Mock()
 
         with patch.object(
-            DirectoryPersister, "_resolve_store_and_prefix"
+            DirectoryPersister, "_resolve_store_and_path"
         ) as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("upload/base"))
 
@@ -441,7 +441,7 @@ class TestErrorHandling:
         mock_stream = [[]]  # Empty batch
         mock_obstore.list.return_value = mock_stream
 
-        with patch.object(DirectoryLoader, "_resolve_store_and_prefix") as mock_resolve:
+        with patch.object(DirectoryLoader, "_resolve_store_and_path") as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data/empty"))
 
             loader = DirectoryLoader()
@@ -461,7 +461,7 @@ class TestErrorHandling:
         mock_store = Mock()
 
         with patch.object(
-            DirectoryPersister, "_resolve_store_and_prefix"
+            DirectoryPersister, "_resolve_store_and_path"
         ) as mock_resolve:
             mock_resolve.return_value = (mock_store, PurePosixPath("data/empty"))
 

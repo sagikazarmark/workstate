@@ -545,9 +545,7 @@ class TestErrorHandling:
                 data_io = loader.load(path_ref)
 
                 # Persist with URL reference (should resolve store)
-                with patch.object(
-                    persister, "_resolve_store_and_prefix"
-                ) as mock_resolve:
+                with patch.object(persister, "_resolve_store_and_path") as mock_resolve:
                     mock_resolve.return_value = (
                         mock_store,
                         PurePosixPath("external/backup.txt"),
