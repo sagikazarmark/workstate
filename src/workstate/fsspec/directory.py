@@ -5,7 +5,7 @@ from typing import overload
 import fsspec
 from pydantic import AnyUrl
 
-from ..directory import Filter
+from ..directory import PathFilter, PrefixFilter
 
 
 class DirectoryLoader:
@@ -16,10 +16,10 @@ class DirectoryLoader:
     def load(self, ref: AnyUrl | PurePosixPath, dst: Path): ...
 
     @overload
-    def load(self, ref: AnyUrl | PurePosixPath, dst: Path, filter: Filter): ...
+    def load(self, ref: AnyUrl | PurePosixPath, dst: Path, filter: PrefixFilter): ...
 
     def load(
-        self, ref: AnyUrl | PurePosixPath, dst: Path, filter: Filter | None = None
+        self, ref: AnyUrl | PurePosixPath, dst: Path, filter: PrefixFilter | None = None
     ):
         # Handle path vs URL references
         if isinstance(ref, PurePosixPath):
@@ -114,14 +114,14 @@ class DirectoryPersister:
         self,
         ref: AnyUrl | PurePosixPath,
         src: Path,
-        filter: Filter,
+        filter: PathFilter,
     ): ...
 
     def persist(
         self,
         ref: AnyUrl | PurePosixPath,
         src: Path,
-        filter: Filter | None = None,
+        filter: PathFilter | None = None,
     ):
         # Handle path vs URL references
         if isinstance(ref, PurePosixPath):

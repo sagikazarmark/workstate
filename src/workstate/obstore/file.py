@@ -28,10 +28,12 @@ class FileLoader(_FileBase):
         ref: AnyUrl | PurePosixPath,
         dst: Path | IO | None = None,
     ) -> IO | None:
-        store, path = self._resolve_store_and_path(ref)
+        store, path = self._resolve_store_and_prefix(ref)
 
         # TODO: https://github.com/developmentseed/obstore/pull/593
         # TODO: https://github.com/developmentseed/obstore/issues/314
+        if path is None:
+            raise ValueError("Cannot load file with empty path")
         data = obstore.get(store, str(path)).bytes().to_bytes()
 
         if dst is None:
@@ -61,6 +63,8 @@ class FilePersister(_FileBase):
         ref: AnyUrl | PurePosixPath,
         src: bytes | bytearray | memoryview | FilePath,
     ):
-        store, path = self._resolve_store_and_path(ref)
+        store, path = self._resolve_store_and_prefix(ref)
 
+        if path is None:
+            raise ValueError("Cannot persist file with empty path")
         obstore.put(store, str(path), src)

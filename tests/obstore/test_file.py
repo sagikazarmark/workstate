@@ -59,7 +59,7 @@ class TestFileBaseClass:
 
         mock_from_url.assert_called_once_with("s3://bucket", client_options=None)
         assert store is mock_store
-        assert path == "/path/to/file"
+        assert path == PurePosixPath("/path/to/file")
 
     @patch("workstate.obstore.file.obstore.store.from_url")
     def test_resolve_store_with_client_options(self, mock_from_url):
@@ -77,7 +77,7 @@ class TestFileBaseClass:
             "s3://bucket", client_options=mock_options
         )
         assert store is mock_store
-        assert path == "/path/to/file"
+        assert path == PurePosixPath("/path/to/file")
 
     @patch("workstate.obstore.file.obstore.store.from_url")
     def test_resolve_store_file_url_with_host_none(self, mock_from_url):
@@ -266,7 +266,7 @@ class TestFileLoader:
         result = loader.load(url)
 
         # Should not call _resolve_store when store is already set
-        mock_get.assert_called_once_with(mock_store, "s3://bucket/test/path")
+        mock_get.assert_called_once_with(mock_store, "/test/path")
         assert isinstance(result, io.BytesIO)
 
 
@@ -420,7 +420,7 @@ class TestFilePersister:
         persister.persist(url, data)
 
         # Should not call _resolve_store when store is already set
-        mock_put.assert_called_once_with(mock_store, "s3://bucket/test/path", data)
+        mock_put.assert_called_once_with(mock_store, "/test/path", data)
 
 
 class TestIntegration:
@@ -545,15 +545,20 @@ class TestErrorHandling:
                 data_io = loader.load(path_ref)
 
                 # Persist with URL reference (should resolve store)
-                with patch.object(persister, "_resolve_store") as mock_resolve:
-                    mock_resolve.return_value = (mock_store, "external/backup.txt")
+                with patch.object(
+                    persister, "_resolve_store_and_prefix"
+                ) as mock_resolve:
+                    mock_resolve.return_value = (
+                        mock_store,
+                        PurePosixPath("external/backup.txt"),
+                    )
                     url_ref = AnyUrl("s3://bucket/external/backup.txt")
                     persister.persist(url_ref, b"test")
 
                     # Verify both operations
                     mock_get.assert_called_once_with(mock_store, "/internal/data.txt")
                     mock_put.assert_called_once_with(
-                        mock_store, "s3://bucket/external/backup.txt", b"test"
+                        mock_store, "external/backup.txt", b"test"
                     )
 
 
@@ -573,8 +578,8 @@ class TestEdgeCases:
             store, path = loader._resolve_store(url)
 
             assert store is mock_store
-            # Path should be empty or minimal
-            assert isinstance(path, str)
+            # Path should be None for empty paths
+            assert path is None
 
     def test_complex_path_handling(self):
         """Test handling of complex paths with special characters."""
@@ -589,7 +594,6 @@ class TestEdgeCases:
             store, path = loader._resolve_store(url)
 
             assert store is mock_store
-            assert (
-                "path/with%20spaces/and-dashes/file.txt" in path
-                or "/path/with%20spaces/and-dashes/file.txt" in path
-            )
+            assert "path/with%20spaces/and-dashes/file.txt" in str(
+                path
+            ) or "/path/with%20spaces/and-dashes/file.txt" in str(path)

@@ -23,7 +23,7 @@ class _Base:
     def _resolve_store(
         self,
         url: AnyUrl,
-    ) -> tuple[obstore.store.ObjectStore, str]:
+    ) -> tuple[obstore.store.ObjectStore, PurePosixPath | None]:
         path = PurePosixPath(url.path or "/")
         host = url.host
 
@@ -42,15 +42,21 @@ class _Base:
 
         store_url = f"{url.scheme}://{host}"
 
+        # Return None for empty or "." paths
+        if str(path) in ("", ".", "/"):
+            prefix = None
+        else:
+            prefix = path
+
         return obstore.store.from_url(
             store_url,
             client_options=self.client_options,
-        ), str(path)
+        ), prefix
 
-    def _resolve_store_and_path(
+    def _resolve_store_and_prefix(
         self,
         ref: AnyUrl | PurePosixPath,
-    ) -> tuple[obstore.store.ObjectStore, PurePosixPath]:
+    ) -> tuple[obstore.store.ObjectStore, PurePosixPath | None]:
         store = self.store
 
         # Handle path vs URL references
@@ -63,8 +69,16 @@ class _Base:
             path = str(ref)
         else:
             # ref is AnyUrl
-            path = str(ref)
             if store is None:
                 store, path = self._resolve_store(ref)
+            else:
+                # Extract path from URL when store is already provided
+                path = str(PurePosixPath(ref.path or "/"))
 
-        return store, PurePosixPath(path)
+        # Return None for empty or "." paths
+        if path in ("", ".", "/"):
+            prefix = None
+        else:
+            prefix = PurePosixPath(path)
+
+        return store, prefix

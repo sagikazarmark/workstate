@@ -2,7 +2,7 @@
 
 import io
 import time
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from unittest.mock import Mock, patch
 
 import pytest
@@ -207,7 +207,7 @@ class TestScalabilityPatterns:
             for url in all_urls:
                 store, path = loader._resolve_store(url)
                 assert store is mock_store
-                assert isinstance(path, str)
+                assert isinstance(path, (PurePosixPath, type(None)))
 
             end_time = time.time()
             total_time = end_time - start_time
