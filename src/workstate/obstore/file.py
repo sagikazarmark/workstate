@@ -86,16 +86,16 @@ class FileLoader(_FileBase):
 
 class FilePersister(_FileBase):
     @overload
-    def persist(self, ref: AnyUrl, file: bytes | bytearray | memoryview): ...
+    def persist(self, ref: AnyUrl, src: bytes | bytearray | memoryview): ...
 
     @overload
-    def persist(self, ref: AnyUrl, file: Path): ...
+    def persist(self, ref: AnyUrl, src: Path): ...
 
-    def persist(self, ref: AnyUrl, file: bytes | bytearray | memoryview | Path):
+    def persist(self, ref: AnyUrl, src: bytes | bytearray | memoryview | Path):
         store = self.store
         path = str(ref)
 
         if store is None:
             store, path = self._resolve_store(ref)
 
-        obstore.put(store, path, file)
+        obstore.put(store, path, src)
