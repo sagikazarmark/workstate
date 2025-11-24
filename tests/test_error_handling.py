@@ -2,7 +2,7 @@
 
 import io
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from unittest.mock import Mock, patch
 from urllib.parse import ParseResult
 
@@ -293,6 +293,98 @@ class TestIOObjectEdgeCases:
                 loader.load(url, dst_io)
 
 
+class TestPathReferenceErrors:
+    """Test error handling specific to path references."""
+
+    def test_loader_path_without_store_error(self):
+        """Test FileLoader raises error when using path without configured store."""
+        loader = FileLoader()
+        path_ref = PurePosixPath("/test/path.txt")
+
+        with pytest.raises(ValueError) as exc_info:
+            loader.load(path_ref)
+
+        assert "Cannot use path reference without a configured store" in str(
+            exc_info.value
+        )
+
+    def test_persister_path_without_store_error(self):
+        """Test FilePersister raises error when using path without configured store."""
+        persister = FilePersister()
+        path_ref = PurePosixPath("/test/path.txt")
+        data = b"test data"
+
+        with pytest.raises(ValueError) as exc_info:
+            persister.persist(path_ref, data)
+
+        assert "Cannot use path reference without a configured store" in str(
+            exc_info.value
+        )
+
+    def test_loader_path_with_destination_without_store_error(self):
+        """Test FileLoader raises error when using path with destination but no store."""
+        loader = FileLoader()
+        path_ref = PurePosixPath("/test/path.txt")
+        dst_path = Path("/tmp/dest.txt")
+
+        with pytest.raises(ValueError) as exc_info:
+            loader.load(path_ref, dst_path)
+
+        assert "Cannot use path reference without a configured store" in str(
+            exc_info.value
+        )
+
+    def test_loader_path_with_io_destination_without_store_error(self):
+        """Test FileLoader raises error when using path with IO destination but no store."""
+        loader = FileLoader()
+        path_ref = PurePosixPath("/test/path.txt")
+        dst_io = io.BytesIO()
+
+        with pytest.raises(ValueError) as exc_info:
+            loader.load(path_ref, dst_io)
+
+        assert "Cannot use path reference without a configured store" in str(
+            exc_info.value
+        )
+
+    def test_persister_path_with_path_source_without_store_error(self):
+        """Test FilePersister raises error when using path reference with Path source but no store."""
+        persister = FilePersister()
+        path_ref = PurePosixPath("/test/path.txt")
+        src_path = Path("/tmp/source.txt")
+
+        with pytest.raises(ValueError) as exc_info:
+            persister.persist(path_ref, src_path)
+
+        assert "Cannot use path reference without a configured store" in str(
+            exc_info.value
+        )
+
+    def test_error_message_content(self):
+        """Test that error messages are descriptive and helpful."""
+        loader = FileLoader()
+        persister = FilePersister()
+        path_ref = PurePosixPath("/test/path.txt")
+
+        # Test loader error message
+        with pytest.raises(ValueError) as loader_exc:
+            loader.load(path_ref)
+
+        loader_message = str(loader_exc.value)
+        assert "path reference" in loader_message.lower()
+        assert "configured store" in loader_message.lower()
+        assert "URL reference" in loader_message
+
+        # Test persister error message
+        with pytest.raises(ValueError) as persister_exc:
+            persister.persist(path_ref, b"data")
+
+        persister_message = str(persister_exc.value)
+        assert "path reference" in persister_message.lower()
+        assert "configured store" in persister_message.lower()
+        assert "URL reference" in persister_message
+
+
 class TestConcurrencyAndStateSafety:
     """Test thread safety and state management."""
 
@@ -334,6 +426,34 @@ class TestConcurrencyAndStateSafety:
         assert loader1.client_options is options1
         assert loader2.client_options is options2
         assert loader1.client_options is not loader2.client_options
+
+    def test_mixed_reference_types_independence(self):
+        """Test that URL and path references work independently in same instance."""
+        mock_store = Mock()
+        loader = FileLoader(store=mock_store)
+        persister = FilePersister(store=mock_store)
+
+        # Should handle both reference types
+        url_ref = AnyUrl("s3://bucket/url-path.txt")
+        path_ref = PurePosixPath("/internal-path.txt")
+
+        # Both reference types should be acceptable
+        with patch("workstate.obstore.file.obstore.get") as mock_get:
+            with patch("workstate.obstore.file.obstore.put") as mock_put:
+                # Mock get response
+                mock_result = Mock()
+                mock_bytes = Mock()
+                mock_bytes.to_bytes.return_value = b"test"
+                mock_result.bytes.return_value = mock_bytes
+                mock_get.return_value = mock_result
+
+                # Test loading with path reference
+                loader.load(path_ref)
+                mock_get.assert_called_with(mock_store, "/internal-path.txt")
+
+                # Test persisting with path reference
+                persister.persist(path_ref, b"data")
+                mock_put.assert_called_with(mock_store, "/internal-path.txt", b"data")
 
 
 class TestResourceCleanup:

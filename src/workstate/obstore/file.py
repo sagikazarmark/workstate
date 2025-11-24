@@ -51,21 +51,32 @@ class _FileBase:
 
 class FileLoader(_FileBase):
     @overload
-    def load(self, ref: AnyUrl) -> IO: ...
+    def load(self, ref: AnyUrl | PurePosixPath) -> IO: ...
 
     @overload
-    def load(self, ref: AnyUrl, dst: Path) -> None: ...
+    def load(self, ref: AnyUrl | PurePosixPath, dst: Path): ...
 
     @overload
-    def load(self, ref: AnyUrl, dst: IO) -> None: ...
+    def load(self, ref: AnyUrl | PurePosixPath, dst: IO): ...
 
-    def load(self, ref: AnyUrl, dst: Path | IO | None = None) -> IO | None:
+    def load(
+        self, ref: AnyUrl | PurePosixPath, dst: Path | IO | None = None
+    ) -> IO | None:
         store = self.store
 
-        path = str(ref)
-
-        if store is None:
-            store, path = self._resolve_store(ref)
+        # Handle path vs URL references
+        if isinstance(ref, PurePosixPath):
+            if store is None:
+                raise ValueError(
+                    "Cannot use path reference without a configured store. "
+                    "Either provide a URL reference or configure a store in the constructor."
+                )
+            path = str(ref)
+        else:
+            # ref is AnyUrl
+            path = str(ref)
+            if store is None:
+                store, path = self._resolve_store(ref)
 
         # TODO: https://github.com/developmentseed/obstore/pull/593
         # TODO: https://github.com/developmentseed/obstore/issues/314
@@ -86,16 +97,30 @@ class FileLoader(_FileBase):
 
 class FilePersister(_FileBase):
     @overload
-    def persist(self, ref: AnyUrl, src: bytes | bytearray | memoryview): ...
+    def persist(
+        self, ref: AnyUrl | PurePosixPath, src: bytes | bytearray | memoryview
+    ): ...
 
     @overload
-    def persist(self, ref: AnyUrl, src: Path): ...
+    def persist(self, ref: AnyUrl | PurePosixPath, src: Path): ...
 
-    def persist(self, ref: AnyUrl, src: bytes | bytearray | memoryview | Path):
+    def persist(
+        self, ref: AnyUrl | PurePosixPath, src: bytes | bytearray | memoryview | Path
+    ):
         store = self.store
-        path = str(ref)
 
-        if store is None:
-            store, path = self._resolve_store(ref)
+        # Handle path vs URL references
+        if isinstance(ref, PurePosixPath):
+            if store is None:
+                raise ValueError(
+                    "Cannot use path reference without a configured store. "
+                    "Either provide a URL reference or configure a store in the constructor."
+                )
+            path = str(ref)
+        else:
+            # ref is AnyUrl
+            path = str(ref)
+            if store is None:
+                store, path = self._resolve_store(ref)
 
         obstore.put(store, path, src)

@@ -1,4 +1,4 @@
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import IO, Protocol, overload
 
 from pydantic import AnyUrl
@@ -6,18 +6,22 @@ from pydantic import AnyUrl
 
 class FileLoader(Protocol):
     @overload
-    def load(self, ref: AnyUrl) -> IO: ...
+    def load(self, ref: AnyUrl | PurePosixPath) -> IO: ...
 
     @overload
-    def load(self, ref: AnyUrl, dst: Path): ...
+    def load(self, ref: AnyUrl | PurePosixPath, dst: Path): ...
 
     @overload
-    def load(self, ref: AnyUrl, dst: IO): ...
+    def load(self, ref: AnyUrl | PurePosixPath, dst: IO): ...
 
 
 class FilePersister(Protocol):
     @overload
-    def persist(self, ref: AnyUrl, src: bytes | bytearray | memoryview): ...
+    def persist(
+        self,
+        ref: AnyUrl | PurePosixPath,
+        src: bytes | bytearray | memoryview,
+    ): ...
 
     @overload
-    def persist(self, ref: AnyUrl, src: Path): ...
+    def persist(self, ref: AnyUrl | PurePosixPath, src: Path): ...
