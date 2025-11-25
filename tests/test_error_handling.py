@@ -4,7 +4,6 @@ import io
 import tempfile
 from pathlib import Path, PurePosixPath
 from unittest.mock import Mock, patch
-from urllib.parse import ParseResult
 
 import pytest
 from pydantic import AnyUrl, ValidationError
@@ -435,7 +434,7 @@ class TestConcurrencyAndStateSafety:
         persister = FilePersister(store=mock_store)
 
         # Should handle both reference types
-        url_ref = AnyUrl("s3://bucket/url-path.txt")
+        _ = AnyUrl("s3://bucket/url-path.txt")
         path_ref = PurePosixPath("/internal-path.txt")
 
         # Both reference types should be acceptable
@@ -495,7 +494,7 @@ class TestResourceCleanup:
 
     def test_temporary_file_cleanup(self):
         """Test that temporary files are handled correctly."""
-        loader = FileLoader()
+        _ = FileLoader()
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_path = Path(tmp_dir)

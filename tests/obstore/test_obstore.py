@@ -1,6 +1,5 @@
 """Tests for the obstore module."""
 
-import pytest
 
 from workstate.obstore import (
     DirectoryLoader,

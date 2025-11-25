@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch
 import pytest
 from pydantic import AnyUrl, DirectoryPath
 
-from workstate.directory import PrefixFilter
 from workstate.fsspec.directory import DirectoryLoader, DirectoryPersister
 
 

@@ -1,6 +1,5 @@
 """Tests for the main workstate module."""
 
-import pytest
 
 from workstate import FileLoader, FilePersister, fsspec, obstore
 

@@ -542,7 +542,7 @@ class TestErrorHandling:
 
                 # Load from path reference
                 path_ref = PurePosixPath("/internal/data.txt")
-                data_io = loader.load(path_ref)
+                _ = loader.load(path_ref)
 
                 # Persist with URL reference (should resolve store)
                 with patch.object(persister, "_resolve_store_and_path") as mock_resolve:

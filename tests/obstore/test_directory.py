@@ -1,13 +1,11 @@
 """Tests for the obstore directory implementation."""
 
 import tempfile
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 from unittest.mock import Mock, patch
 
-import pytest
 from pydantic import AnyUrl, DirectoryPath
 
-from workstate.directory import PrefixFilter
 from workstate.obstore.directory import DirectoryLoader, DirectoryPersister
 
 
@@ -423,8 +421,8 @@ class TestIntegration:
         persister = DirectoryPersister()
 
         # Test that both accept PurePosixPath and AnyUrl
-        path_ref = PurePosixPath("local/path")
-        url_ref = AnyUrl("s3://bucket/remote/path")
+        _ = PurePosixPath("local/path")
+        _ = AnyUrl("s3://bucket/remote/path")
 
         # These should not raise type errors (basic smoke test)
         assert loader is not None

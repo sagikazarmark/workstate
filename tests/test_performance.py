@@ -2,7 +2,7 @@
 
 import io
 import time
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 from unittest.mock import Mock, patch
 
 import pytest
@@ -121,7 +121,7 @@ class TestPerformanceBasics:
 
     def test_memory_usage_io_objects(self):
         """Test memory efficiency of IO object creation."""
-        loader = FileLoader()
+        _ = FileLoader()
 
         # Create many IO objects and verify they don't accumulate
         ios = []
@@ -221,8 +221,8 @@ class TestScalabilityPatterns:
         """Test performance with multiple concurrent instances."""
         # Create multiple instances
         num_instances = 50
-        loaders = [FileLoader() for _ in range(num_instances)]
-        persisters = [FilePersister() for _ in range(num_instances)]
+        _ = [FileLoader() for _ in range(num_instances)]
+        _ = [FilePersister() for _ in range(num_instances)]
 
         # Test that creation is fast
         start_time = time.time()

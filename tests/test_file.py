@@ -2,7 +2,6 @@
 
 import io
 from pathlib import Path, PurePosixPath
-from typing import IO, get_type_hints
 from unittest.mock import Mock
 
 import pytest
