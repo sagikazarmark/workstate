@@ -4,7 +4,6 @@ from pathlib import Path, PurePosixPath
 from typing import IO, overload
 
 import obstore
-import obstore.store
 from pydantic import AnyUrl, FilePath
 
 from .base import _Base
