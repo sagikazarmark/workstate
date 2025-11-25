@@ -126,7 +126,7 @@ class DirectoryPersister(_DirectoryBase):
         store, prefix = self._resolve_store_and_path(ref)
 
         for file_path in _filter_files(src, filter):
-            relative_path = file_path.relative_to(src)
+            relative_path = file_path.relative_to(src).as_posix()
             object_key = str(relative_path)
 
             if prefix is not None:
