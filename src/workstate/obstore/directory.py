@@ -29,6 +29,22 @@ class DirectoryLoader(_DirectoryBase):
         filter: PrefixFilter,
     ): ...
 
+    @overload
+    def load(
+        self,
+        ref: AnyUrl | PurePosixPath,
+        dst: DirectoryPath,
+        filter: PrefixFilter | None,
+    ): ...
+
+    @overload
+    def load(
+        self,
+        ref: AnyUrl | PurePosixPath,
+        dst: DirectoryPath,
+        filter: PrefixFilter | None = None,
+    ): ...
+
     def load(
         self,
         ref: AnyUrl | PurePosixPath,
@@ -83,6 +99,22 @@ class DirectoryPersister(_DirectoryBase):
         ref: AnyUrl | PurePosixPath,
         src: DirectoryPath,
         filter: PathFilter,
+    ): ...
+
+    @overload
+    def persist(
+        self,
+        ref: AnyUrl | PurePosixPath,
+        src: DirectoryPath,
+        filter: PathFilter | None,
+    ): ...
+
+    @overload
+    def persist(
+        self,
+        ref: AnyUrl | PurePosixPath,
+        src: DirectoryPath,
+        filter: PathFilter | None = None,
     ): ...
 
     def persist(
