@@ -3,13 +3,17 @@ from pathlib import Path, PurePosixPath
 from typing import IO, cast, overload
 
 import fsspec
-from pydantic import AnyUrl
+import fsspec.core
+from pydantic import AnyUrl, FilePath
+
+from .base import _Base
 
 
-class FileLoader:
-    def __init__(self, fs: fsspec.AbstractFileSystem | None = None):
-        self.fs = fs
+class _FileBase(_Base):
+    pass
 
+
+class FileLoader(_FileBase):
     @overload
     def load(self, ref: AnyUrl | PurePosixPath) -> IO: ...
 
@@ -20,9 +24,11 @@ class FileLoader:
     def load(self, ref: AnyUrl | PurePosixPath, dst: IO): ...
 
     def load(
-        self, ref: AnyUrl | PurePosixPath, dst: Path | IO | None = None
+        self,
+        ref: AnyUrl | PurePosixPath,
+        dst: Path | IO | None = None,
     ) -> IO | None:
-        # Handle path vs URL references
+        # Handle path vs URL references using base class logic
         if isinstance(ref, PurePosixPath):
             if self.fs is None:
                 raise ValueError(
@@ -30,26 +36,33 @@ class FileLoader:
                     "Either provide a URL reference or configure a filesystem in the constructor."
                 )
             ref_str = str(ref)
+            fs = self.fs
         else:
             # ref is AnyUrl
             ref_str = str(ref)
+            if self.fs is not None:
+                # Use configured filesystem
+                fs = self.fs
+            else:
+                # No configured filesystem - use fsspec.open for backward compatibility
+                fs = None
 
         if dst is None:
             # Return as IO - ensure binary mode and cast to IO
-            if self.fs is None:
+            if fs is None:
                 # ref_str is from URL, so this always returns OpenFile
                 return cast(
                     IO, cast(fsspec.core.OpenFile, fsspec.open(ref_str, "rb")).open()
                 )
 
-            return cast(IO, self.fs.open(ref_str, "rb"))
+            return cast(IO, fs.open(ref_str, "rb"))
         else:
             # Read the data - ensure binary mode
-            if self.fs is None:
+            if fs is None:
                 with cast(fsspec.core.OpenFile, fsspec.open(ref_str, "rb")).open() as f:
                     data = f.read()
             else:
-                with self.fs.open(ref_str, "rb") as f:
+                with fs.open(ref_str, "rb") as f:
                     data = f.read()
 
             # Ensure data is bytes
@@ -59,29 +72,30 @@ class FileLoader:
             if isinstance(dst, Path):
                 # Write to the provided path
                 dst.write_bytes(data)
+                return None
             else:
                 # Write to the provided IO object
                 dst.write(data)
+                return None
 
-            return None
 
-
-class FilePersister:
-    def __init__(self, fs: fsspec.AbstractFileSystem | None = None):
-        self.fs = fs
-
+class FilePersister(_FileBase):
     @overload
     def persist(
-        self, ref: AnyUrl | PurePosixPath, src: bytes | bytearray | memoryview
+        self,
+        ref: AnyUrl | PurePosixPath,
+        src: bytes | bytearray | memoryview,
     ): ...
 
     @overload
-    def persist(self, ref: AnyUrl | PurePosixPath, src: Path): ...
+    def persist(self, ref: AnyUrl | PurePosixPath, src: FilePath): ...
 
     def persist(
-        self, ref: AnyUrl | PurePosixPath, src: bytes | bytearray | memoryview | Path
+        self,
+        ref: AnyUrl | PurePosixPath,
+        src: bytes | bytearray | memoryview | FilePath,
     ):
-        # Handle path vs URL references
+        # Handle path vs URL references using base class logic
         if isinstance(ref, PurePosixPath):
             if self.fs is None:
                 raise ValueError(
@@ -89,18 +103,20 @@ class FilePersister:
                     "Either provide a URL reference or configure a filesystem in the constructor."
                 )
             ref_str = str(ref)
+            fs = self.fs
         else:
             # ref is AnyUrl
             ref_str = str(ref)
+            fs = self.fs
 
-        if self.fs is None:
+        if fs is None:
             # ref_str is from URL, so this always returns OpenFile
             of = cast(
                 fsspec.core.OpenFile,
                 fsspec.open(ref_str, "wb"),
             )
         else:
-            of = self.fs.open(ref_str, "wb")
+            of = fs.open(ref_str, "wb")
 
         with of as f:
             if isinstance(src, Path):
