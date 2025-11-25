@@ -1,6 +1,5 @@
 """Tests for the obstore module."""
 
-
 from workstate.obstore import (
     DirectoryLoader,
     DirectoryPersister,
