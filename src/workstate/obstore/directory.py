@@ -143,7 +143,7 @@ class DirectoryPersister(_DirectoryBase):
             if prefix is not None:
                 object_key = str(prefix.joinpath(relative_path))
 
-            self.logger.info("Uploading file", extra={"src": str(relative_path)})
+            logger.info("Uploading file", extra={"src": str(relative_path)})
 
             store.put(object_key, file_path)
             count += 1
