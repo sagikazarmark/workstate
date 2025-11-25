@@ -2,7 +2,7 @@
 
 import io
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from unittest.mock import Mock, patch
 
 import pytest
@@ -18,12 +18,13 @@ class TestObstoreIntegration:
     """Integration tests that require obstore to be available."""
 
     @pytest.mark.integration
+    @patch("obstore.store.from_url")
     @patch("workstate.obstore.file.obstore")
-    def test_full_roundtrip_with_bytes(self, mock_obstore):
+    def test_full_roundtrip_with_bytes(self, mock_obstore, mock_from_url):
         """Test full roundtrip: persist data and then load it back."""
         # Setup mocks for persist operation
         mock_store = Mock()
-        mock_obstore.store.from_url.return_value = mock_store
+        mock_from_url.return_value = mock_store
 
         # Setup mocks for load operation
         mock_result = Mock()
@@ -50,19 +51,20 @@ class TestObstoreIntegration:
         assert loaded_data == test_data
 
         # Verify the underlying calls
-        mock_obstore.store.from_url.assert_called()
+        mock_from_url.assert_called()
         mock_obstore.put.assert_called_once_with(
             mock_store, "/integration-test-file", test_data
         )
         mock_obstore.get.assert_called_once_with(mock_store, "/integration-test-file")
 
     @pytest.mark.integration
+    @patch("obstore.store.from_url")
     @patch("workstate.obstore.file.obstore")
-    def test_full_roundtrip_with_files(self, mock_obstore):
+    def test_full_roundtrip_with_files(self, mock_obstore, mock_from_url):
         """Test full roundtrip using file paths."""
         # Setup mocks
         mock_store = Mock()
-        mock_obstore.store.from_url.return_value = mock_store
+        mock_from_url.return_value = mock_store
 
         # Setup mocks for load operation
         mock_result = Mock()
@@ -98,7 +100,7 @@ class TestObstoreIntegration:
             assert dst_file.read_bytes() == test_data
 
             # Verify the underlying calls
-            mock_obstore.store.from_url.assert_called()
+            mock_from_url.assert_called()
             mock_obstore.put.assert_called_once_with(
                 mock_store, "/file-integration-test", src_file
             )
@@ -107,9 +109,11 @@ class TestObstoreIntegration:
             )
 
     @pytest.mark.integration
+    @patch("obstore.store.from_url")
     @patch("workstate.obstore.file.obstore")
-    def test_shared_store_instance(self, mock_obstore):
-        """Test that loader and persister can share a store instance."""
+    def test_shared_store_instance(self, mock_obstore, mock_from_url):
+        """Test that multiple instances can share the same store."""
+        # Setup mocks
         mock_store = Mock()
 
         # Setup mocks for operations
@@ -136,11 +140,13 @@ class TestObstoreIntegration:
         assert loaded_data == test_data
 
         # Verify that store resolution was not called (since store was provided)
-        mock_obstore.store.from_url.assert_not_called()
+        mock_from_url.assert_not_called()
 
         # Verify operations used the shared store
-        mock_obstore.put.assert_called_once_with(mock_store, str(url), test_data)
-        mock_obstore.get.assert_called_once_with(mock_store, str(url))
+        mock_obstore.put.assert_called_once_with(
+            mock_store, "/shared-store-test", test_data
+        )
+        mock_obstore.get.assert_called_once_with(mock_store, "/shared-store-test")
 
     @pytest.mark.integration
     def test_protocol_compliance(self):
@@ -164,11 +170,12 @@ class TestObstoreIntegration:
         assert use_persister(persister)
 
     @pytest.mark.integration
+    @patch("obstore.store.from_url")
     @patch("workstate.obstore.file.obstore")
-    def test_different_url_schemes(self, mock_obstore):
+    def test_different_url_schemes(self, mock_obstore, mock_from_url):
         """Test that different URL schemes are handled correctly."""
         mock_store = Mock()
-        mock_obstore.store.from_url.return_value = mock_store
+        mock_from_url.return_value = mock_store
 
         loader = FileLoader()
 
@@ -184,15 +191,17 @@ class TestObstoreIntegration:
             store, path = loader._resolve_store(url)
 
             assert store is mock_store
-            assert isinstance(path, str)
-            assert len(path) > 0
+            assert isinstance(path, (PurePosixPath, type(None)))
+            if path is not None:
+                assert len(str(path)) > 0
 
     @pytest.mark.integration
+    @patch("obstore.store.from_url")
     @patch("workstate.obstore.file.obstore")
-    def test_client_options_propagation(self, mock_obstore):
+    def test_client_options_propagation(self, mock_obstore, mock_from_url):
         """Test that client options are properly propagated."""
         mock_store = Mock()
-        mock_obstore.store.from_url.return_value = mock_store
+        mock_from_url.return_value = mock_store
 
         client_options = {
             "aws_access_key_id": "test_key",
@@ -201,23 +210,25 @@ class TestObstoreIntegration:
         }
 
         loader = FileLoader(client_options=client_options)
+
         url = AnyUrl("s3://test-bucket/test-key")
 
         store, path = loader._resolve_store(url)
 
         # Verify that client options were passed to from_url
-        mock_obstore.store.from_url.assert_called_once_with(
+        mock_from_url.assert_called_once_with(
             "s3://test-bucket", client_options=client_options
         )
         assert store is mock_store
-        assert path == "/test-key"
+        assert path == PurePosixPath("/test-key")
 
     @pytest.mark.integration
+    @patch("obstore.store.from_url")
     @patch("workstate.obstore.file.obstore")
-    def test_error_handling(self, mock_obstore):
+    def test_error_handling(self, mock_obstore, mock_from_url):
         """Test error handling in obstore operations."""
         # Test exception propagation from obstore
-        mock_obstore.store.from_url.side_effect = ValueError("Invalid URL")
+        mock_from_url.side_effect = ValueError("Invalid URL")
 
         loader = FileLoader()
         url = AnyUrl("invalid://url/format")
@@ -226,11 +237,12 @@ class TestObstoreIntegration:
             loader._resolve_store(url)
 
     @pytest.mark.integration
+    @patch("obstore.store.from_url")
     @patch("workstate.obstore.file.obstore")
-    def test_memory_efficiency_large_data(self, mock_obstore):
+    def test_memory_efficiency_large_data(self, mock_obstore, mock_from_url):
         """Test handling of larger data to verify memory efficiency."""
         mock_store = Mock()
-        mock_obstore.store.from_url.return_value = mock_store
+        mock_from_url.return_value = mock_store
 
         # Create relatively large test data (1MB)
         large_data = b"x" * (1024 * 1024)

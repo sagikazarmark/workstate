@@ -60,8 +60,9 @@ class TestURLValidationAndParsing:
                 store, path = loader._resolve_store(url)
 
                 assert store is mock_store
-                assert isinstance(path, str)
-                assert len(path) > 0
+                assert isinstance(path, (PurePosixPath, type(None)))
+                if path is not None:
+                    assert len(str(path)) > 0
 
     def test_very_long_urls(self):
         """Test handling of very long URLs."""
@@ -79,7 +80,7 @@ class TestURLValidationAndParsing:
             store, path = loader._resolve_store(url)
 
             assert store is mock_store
-            assert len(path) > 900  # Should be quite long
+            assert len(str(path)) > 900  # Should be quite long
 
 
 class TestObstoreIntegrationErrors:
