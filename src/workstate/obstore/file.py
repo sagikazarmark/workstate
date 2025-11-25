@@ -1,4 +1,5 @@
 import io
+import logging
 from pathlib import Path, PurePosixPath
 from typing import IO, overload
 
@@ -70,4 +71,14 @@ class FilePersister(_FileBase):
         if path is None:
             raise ValueError("Cannot persist file with empty path")
 
+        logger = logging.LoggerAdapter(
+            self.logger,
+            {"ref": str(ref)},
+            merge_extra=True,
+        )
+
+        logger.info("Starting persistence")
+
         obstore.put(store, str(path), src)
+
+        logger.info("Finished persistence")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import PurePosixPath
 from typing import TYPE_CHECKING, Sequence, overload
 
@@ -125,6 +126,16 @@ class DirectoryPersister(_DirectoryBase):
     ):
         store, prefix = self._resolve_store_and_path(ref)
 
+        logger = logging.LoggerAdapter(
+            self.logger,
+            {"ref": str(ref), "src": str(src)},
+            merge_extra=True,
+        )
+
+        logger.info("Starting persistence")
+
+        count = 0
+
         for file_path in _filter_files(src, filter):
             relative_path = file_path.relative_to(src).as_posix()
             object_key = str(relative_path)
@@ -132,6 +143,12 @@ class DirectoryPersister(_DirectoryBase):
             if prefix is not None:
                 object_key = str(prefix.joinpath(relative_path))
 
-            # self.logger.info("Uploading file", extra={"file": str(relative_path)})
+            self.logger.info("Uploading file", extra={"src": str(relative_path)})
 
             store.put(object_key, file_path)
+            count += 1
+
+        if count == 0:
+            logger.warning("No files persisted")
+
+        logger.info("Finished persistence", extra={"count": count})

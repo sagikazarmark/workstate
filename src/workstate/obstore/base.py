@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import PurePosixPath
 from typing import TYPE_CHECKING
 
@@ -10,15 +11,19 @@ from pydantic import AnyUrl
 if TYPE_CHECKING:
     from obstore.store import ClientConfig
 
+_logger = logging.getLogger(__name__)
+
 
 class _Base:
     def __init__(
         self,
         store: obstore.store.ObjectStore | None = None,
         client_options: ClientConfig | None = None,
+        logger: logging.Logger = _logger,
     ):
         self.store = store
         self.client_options = client_options
+        self.logger = logger
 
     def _resolve_store(
         self,
