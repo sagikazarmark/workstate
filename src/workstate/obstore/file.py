@@ -33,6 +33,8 @@ class FileLoader(_FileBase):
         if path is None:
             raise ValueError("Cannot load file with empty path")
 
+        self.logger.info("Loading file", extra={"ref": ref})
+
         # TODO: https://github.com/developmentseed/obstore/pull/593
         # TODO: https://github.com/developmentseed/obstore/issues/314
         data = obstore.get(store, str(path)).bytes().to_bytes()

@@ -59,6 +59,14 @@ class DirectoryLoader(_DirectoryBase):
             prefix=str(prefix) if prefix else None,
         )
 
+        logger = logging.LoggerAdapter(
+            self.logger,
+            {"ref": str(ref)},
+            merge_extra=True,
+        )
+
+        logger.info("Loading directory")
+
         for objects in stream:
             for object in objects:
                 object_key = object.path  # Keep original for download
@@ -81,9 +89,13 @@ class DirectoryLoader(_DirectoryBase):
                 dst_file = dst / relative_path
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
 
+                logger.info("Downloading file", extra={"key": object_key})
+
                 # Download using the full object key
                 data = obstore.get(store, object_key).bytes().to_bytes()
                 dst_file.write_bytes(data)
+
+        logger.info("Finished loading directory")
 
 
 class DirectoryPersister(_DirectoryBase):
